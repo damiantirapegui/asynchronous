@@ -92,10 +92,21 @@ const renderCountry = function (data, className = '') {
 //   request.open('GET', `https://restcountries.com/v2/name/${country}`);
 //   request.send();
 
+const renderError = function (msg) {
+  countriesContainer.insertAdjacentText('beforeend', msg);
+  countriesContainer.style.opacity = 1;
+};
+
 const getCountry = function (country) {
   // country 1
   fetch(`https://restcountries.com/v2/name/${country}`)
-    .then(response => response.json())
+    .then(response => {
+      console.log(response);
+
+      if (!response.ok) throw new Error(`Country not found ${response.status}`);
+
+      return response.json();
+    })
     .then(data => {
       renderCountry(data[0]);
       const neighbour = data[0].borders[0];
@@ -104,7 +115,13 @@ const getCountry = function (country) {
       return fetch(`https://restcountries.com/v2/alpha/${neighbour}`);
     })
     .then(response => response.json())
-    .then(data => renderCountry(data, 'neighbour'));
+    .then(data => renderCountry(data, 'neighbour'))
+    .catch(err => {
+      console.error(err);
+      renderError(`Something went wrong ${err.message}. Try again!`);
+    });
 };
 
-getCountry('germany');
+btn.addEventListener('click', function () {
+  getCountry('germany');
+});
